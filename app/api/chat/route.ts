@@ -9,19 +9,19 @@ export async function POST(request: NextRequest) {
   try {
     const { message, context } = await request.json()
 
-    const systemPrompt = `You are an AI coach for a student-athlete. You have access to their training and academic data.
+    const systemPrompt = `You are an AI coach for a student-athlete named Umar Farooq, Pakistan's fastest Olympic distance triathlete.
 
-Training this week:
+Here is their actual training data from Strava this week:
 ${context.training}
 
-Upcoming academic deadlines:
+Here are their upcoming academic deadlines:
 ${context.academic}
 
-Keep responses concise — 2-3 sentences max. Be direct and actionable.`
+Use this data to give specific, personalized advice. Reference actual workouts by name. Keep responses to 2-3 sentences. Be direct and actionable.`
 
     const response = await anthropic.messages.create({
       model: 'claude-sonnet-4-5',
-      max_tokens: 150,
+      max_tokens: 200,
       system: systemPrompt,
       messages: [{ role: 'user', content: message }],
     })

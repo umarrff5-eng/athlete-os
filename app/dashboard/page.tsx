@@ -138,9 +138,13 @@ export default function Dashboard() {
     setMessages(m => [...m, { role: 'user', text: userMessage }])
     setTyping(true)
     try {
-      const trainingContext = workouts.slice(0, 5).map(w =>
-        `${w.day}: ${w.name} - ${w.duration}${w.distance ? ` - ${typeof w.distance === 'number' ? w.distance.toFixed(1) : w.distance}km` : ''}`
-      ).join('\n')
+      const trainingContext = activities.length > 0
+  ? activities.slice(0, 7).map((a: any) => 
+      `${new Date(a.start_date).toLocaleDateString('en-US', { weekday: 'short' })}: ${a.name} (${a.type}) - ${Math.floor(a.moving_time/60)} min - ${(a.distance/1000).toFixed(1)}km`
+    ).join('\n')
+  : workouts.slice(0, 5).map(w =>
+      `${w.day}: ${w.name} - ${w.duration}${w.distance ? ` - ${typeof w.distance === 'number' ? w.distance.toFixed(1) : w.distance}km` : ''}`
+    ).join('\n')
       const academicContext = allComponents.slice(0, 5).map(c =>
         `${c.type}: ${c.label} (${c.course}) - ${c.date ? `due in ${daysUntil(c.date)} days` : 'no date set'} - weight: ${c.weight}%`
       ).join('\n')
