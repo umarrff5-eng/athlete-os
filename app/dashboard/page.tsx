@@ -2,9 +2,11 @@
 import { useEffect, useState, useRef } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useRouter } from 'next/navigation'
+import PlanView from './PlanView'
 
 const NAV = [
   { id: 'dashboard', label: 'Dashboard' },
+  { id: 'plan', label: 'Plan' },
   { id: 'training', label: 'Training' },
   { id: 'courses', label: 'Courses' },
   { id: 'settings', label: 'Settings' },
@@ -101,11 +103,18 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (!accessToken) return
-    fetch(`/api/strava?access_token=${accessToken}`)
-      .then(r => r.json())
-      .then(data => { if (Array.isArray(data)) setActivities(data) })
-  }, [accessToken])
+    
+    const fetchActivities = () => {
+      fetch(`/api/strava?access_token=${accessToken}`)
+        .then(r => r.json())
+        .then(data => { if (Array.isArray(data)) setActivities(data) })
+    }
 
+    fetchActivities()
+    const interval = setInterval(fetchActivities, 5 * 60 * 1000)
+    return () => clearInterval(interval)
+  }, [accessToken])
+  
   const workouts = activities.length > 0
     ? activities.slice(0, 10).map((a: any) => ({
         id: a.id, name: a.name, type: a.type,
@@ -139,12 +148,12 @@ export default function Dashboard() {
     setTyping(true)
     try {
       const trainingContext = activities.length > 0
-  ? activities.slice(0, 7).map((a: any) => 
-      `${new Date(a.start_date).toLocaleDateString('en-US', { weekday: 'short' })}: ${a.name} (${a.type}) - ${Math.floor(a.moving_time/60)} min - ${(a.distance/1000).toFixed(1)}km`
-    ).join('\n')
-  : workouts.slice(0, 5).map(w =>
-      `${w.day}: ${w.name} - ${w.duration}${w.distance ? ` - ${typeof w.distance === 'number' ? w.distance.toFixed(1) : w.distance}km` : ''}`
-    ).join('\n')
+        ? activities.slice(0, 7).map((a: any) =>
+            `${new Date(a.start_date).toLocaleDateString('en-US', { weekday: 'short' })}: ${a.name} (${a.type}) - ${Math.floor(a.moving_time/60)} min - ${(a.distance/1000).toFixed(1)}km`
+          ).join('\n')
+        : workouts.slice(0, 5).map(w =>
+            `${w.day}: ${w.name} - ${w.duration}${w.distance ? ` - ${typeof w.distance === 'number' ? w.distance.toFixed(1) : w.distance}km` : ''}`
+          ).join('\n')
       const academicContext = allComponents.slice(0, 5).map(c =>
         `${c.type}: ${c.label} (${c.course}) - ${c.date ? `due in ${daysUntil(c.date)} days` : 'no date set'} - weight: ${c.weight}%`
       ).join('\n')
@@ -302,8 +311,7 @@ export default function Dashboard() {
               className="flex-1 border rounded-xl px-4 py-3 text-sm placeholder-[#333] focus:outline-none focus:border-[#F5C518] transition"
               onKeyDown={e => { if (e.key === 'Enter') sendMessage() }}
             />
-            <button
-              onClick={sendMessage}
+            <button onClick={sendMessage}
               style={{ background: '#F5C518', color: '#080808' }}
               className="font-semibold text-sm px-6 py-3 rounded-xl hover:opacity-80 transition shrink-0">
               Send
@@ -475,6 +483,7 @@ export default function Dashboard() {
   const renderView = () => {
     switch (activeNav) {
       case 'dashboard': return renderDashboard()
+      case 'plan': return <PlanView allComponents={allComponents} activities={activities} daysUntil={daysUntil} />
       case 'training': return renderTraining()
       case 'courses': return renderCourses()
       case 'settings': return renderSettings()
