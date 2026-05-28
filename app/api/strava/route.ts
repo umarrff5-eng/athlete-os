@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
   }
 
   const response = await fetch(
-    'https://www.strava.com/api/v3/athlete/activities?per_page=20',
+   'https://www.strava.com/api/v3/athlete/activities?per_page=100',
     {
       headers: {
         Authorization: `Bearer ${accessToken}`,
