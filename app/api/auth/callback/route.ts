@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
   const data = await response.json()
 
   if (data.access_token) {
-    const redirectUrl = new URL('/', request.url)
+  const redirectUrl = new URL('/dashboard', request.url)
     redirectUrl.searchParams.set('access_token', data.access_token)
     return NextResponse.redirect(redirectUrl)
   }
