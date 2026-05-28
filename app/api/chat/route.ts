@@ -9,24 +9,34 @@ export async function POST(request: NextRequest) {
   try {
     const { message, context } = await request.json()
 
-    const systemPrompt = `You are an AI coach for a student-athlete named Umar Farooq, Pakistan's fastest Olympic distance triathlete.
+    const isPlanning = message.includes('Generate a 7-day training plan')
 
-Here is their actual training data from Strava this week:
+    const systemPrompt = isPlanning
+      ? `You are a training plan generator. You must respond with ONLY a valid JSON array. No text before or after. No markdown. No backticks. Just the raw JSON array starting with [ and ending with ].`
+      : `You are an AI coach for a student-athlete named Umar Farooq, Pakistan's fastest Olympic distance triathlete.
+
+Training data from Strava:
 ${context.training}
 
-Here are their upcoming academic deadlines:
+Upcoming academic deadlines:
 ${context.academic}
 
-Use this data to give specific, personalized advice. Reference actual workouts by name. Keep responses to 2-3 sentences. Be direct and actionable.`
+Keep responses to 2-3 sentences. Be direct and actionable.`
 
     const response = await anthropic.messages.create({
       model: 'claude-sonnet-4-5',
-      max_tokens: 200,
+      max_tokens: 1000,
       system: systemPrompt,
       messages: [{ role: 'user', content: message }],
     })
 
-    const text = response.content[0].type === 'text' ? response.content[0].text : ''
+    let text = response.content[0].type === 'text' ? response.content[0].text : ''
+
+    if (isPlanning) {
+      const match = text.match(/\[[\s\S]*\]/)
+      if (match) text = match[0]
+    }
+
     return NextResponse.json({ message: text })
   } catch (error) {
     console.error('Chat error:', error)
